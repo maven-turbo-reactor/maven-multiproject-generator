@@ -25,10 +25,10 @@ public class MavenGenerator {
 
         File rootDir = new File("generated");
         if (rootDir.exists()) {
-            throw new IllegalStateException(rootDir + " directory already exists, delete first");
+            throw new IllegalStateException(rootDir.getAbsolutePath() + " directory already exists, delete first");
         }
         rootDir.mkdirs();
         MavenWriter.writeProjects(rootDir, graph);
-        System.out.println("Generated project can be found in " + rootDir);
+        System.out.println("Generated project can be found in " + rootDir.getAbsolutePath());
     }
 }
