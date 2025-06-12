@@ -11,8 +11,8 @@ public class MavenGenerator {
 
     public static void main(String[] args) throws IOException {
         int startIndex = 1;
-        int depth = 11;
-        int children = 2;
+        int depth = 5;
+        int children = 5;
         var graph = GraphGenerator.generateGraph(depth, startIndex, children);
         graph.edges().forEach((node, deps) -> {
             System.out.println(node + " " + deps);

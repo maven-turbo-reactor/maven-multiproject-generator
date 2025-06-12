@@ -81,6 +81,31 @@ public class MavenWriter {
                         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
                     </properties>
                 
+                    <build>
+                        <plugins>
+                            <plugin>
+                                <groupId>org.apache.maven.plugins</groupId>
+                                <artifactId>maven-enforcer-plugin</artifactId>
+                                <version>3.3.0</version>
+                                <executions>
+                                    <execution>
+                                        <id>enforce</id>
+                                        <configuration>
+                                            <rules>
+                                                <DependencyConvergence>
+                                                    <uniqueVersions>false</uniqueVersions>
+                                                </DependencyConvergence>
+                                            </rules>
+                                        </configuration>
+                                        <goals>
+                                            <goal>enforce</goal>
+                                        </goals>
+                                    </execution>
+                                </executions>
+                            </plugin>
+                        </plugins>
+                    </build>
+
                     <dependencyManagement>
                         <dependencies>
                             <dependency>
