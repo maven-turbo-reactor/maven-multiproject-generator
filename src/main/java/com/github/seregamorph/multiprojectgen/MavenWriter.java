@@ -33,10 +33,14 @@ public class MavenWriter {
                          xsi:schemaLocation="http://maven.apache.org/POM/4.0.0 http://maven.apache.org/xsd/maven-4.0.0.xsd">
                     <modelVersion>4.0.0</modelVersion>
                 
-                    <groupId>com.example.performance.test</groupId>
+                    <parent>
+                        <groupId>com.example.performance.test</groupId>
+                        <artifactId>root</artifactId>
+                        <version>1.0-SNAPSHOT</version>
+                    </parent>
+
                     <artifactId>""" + artifactId + """
                 </artifactId>
-                    <version>1.0-SNAPSHOT</version>
                 
                     <dependencies>
                 """
@@ -77,6 +81,18 @@ public class MavenWriter {
                         <project.build.sourceEncoding>UTF-8</project.build.sourceEncoding>
                     </properties>
                 
+                    <dependencyManagement>
+                        <dependencies>
+                            <dependency>
+                                <groupId>org.springframework.boot</groupId>
+                                <artifactId>spring-boot-dependencies</artifactId>
+                                <version>3.5.0</version>
+                                <type>pom</type>
+                                <scope>import</scope>
+                            </dependency>
+                        </dependencies>
+                    </dependencyManagement>
+
                     <modules>
                 """
                 + (
