@@ -20,15 +20,16 @@ child nodes, M is depth, then shrinks back to 1:
 ```
         Sample graph with
         depth=3 (grows 1..3, then shrinks 3..5),
-        startIndex=1 (left node name offset)
-        and children=2 (scaling while going deep)
+        startIndex=1 (left node name offset),
+        children=2 (scaling while going deep)
+        and tail=3
 
                  3_0
                 /   \
              2_0     4_0
             /   \   /   \
            /     3_1     \
-        1_0               5_0
+        1_0               5_0--6_0--7_0--8_0
            \     3_2     /
             \   /   \   /
              2_1     4_1
