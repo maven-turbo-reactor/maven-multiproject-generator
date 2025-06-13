@@ -19,9 +19,9 @@ public class MavenGenerator {
             System.out.println(node + " " + deps);
         });
         long edgesNum = graph.edges().values().stream()
-                .flatMap(Collection::stream)
-                .count();
-        System.out.println("Number of modules: " + graph.edges().keySet().size());
+                .mapToLong(Collection::size)
+                .sum();
+        System.out.println("Number of modules: " + graph.edges().size());
         System.out.println("Number of edges: " + edgesNum);
 
         File rootDir = new File("generated");

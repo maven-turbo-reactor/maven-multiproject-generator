@@ -4,12 +4,13 @@ import org.intellij.lang.annotations.Language;
 
 import java.io.File;
 import java.io.IOException;
-import java.nio.charset.StandardCharsets;
 import java.nio.file.Files;
 import java.util.Collection;
 import java.util.Map;
 import java.util.Set;
 import java.util.stream.Collectors;
+
+import static java.nio.charset.StandardCharsets.UTF_8;
 
 /**
  * @author Sergey Chernov
@@ -18,6 +19,7 @@ public class MavenWriter {
 
     public static void writeProjects(File rootDir, Graph graph) throws IOException {
         writeRootPom(new File(rootDir, "pom.xml"), graph);
+        writeMavenConfig(new File(rootDir, ".mvn/maven.config"));
         for (Map.Entry<String, Set<String>> entry : graph.edges().entrySet()) {
             String nodeId = entry.getKey();
             var dir = dir(nodeId);
@@ -27,7 +29,7 @@ public class MavenWriter {
     }
 
     private static void writePom(File pomFile, String artifactId, Collection<String> compileDepArtifactIds) throws IOException {
-        @Language("XML") var contents = """
+        @Language("XML") var content = """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <project xmlns="http://maven.apache.org/POM/4.0.0"
                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -38,6 +40,7 @@ public class MavenWriter {
                         <groupId>com.example.performance.test</groupId>
                         <artifactId>root</artifactId>
                         <version>1.0-SNAPSHOT</version>
+                        <relativePath>../..</relativePath>
                     </parent>
 
                     <artifactId>""" + artifactId + """
@@ -60,11 +63,11 @@ public class MavenWriter {
                 </project>
                 """;
         pomFile.getParentFile().mkdirs();
-        Files.write(pomFile.toPath(), contents.getBytes(StandardCharsets.UTF_8));
+        Files.write(pomFile.toPath(), content.getBytes(UTF_8));
     }
 
     private static void writeRootPom(File pomFile, Graph graph) throws IOException {
-        @Language("XML") var contents = """
+        @Language("XML") var content = """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <project xmlns="http://maven.apache.org/POM/4.0.0"
                          xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
@@ -129,7 +132,15 @@ public class MavenWriter {
                     </modules>
                 </project>
                 """;
-        Files.write(pomFile.toPath(), contents.getBytes(StandardCharsets.UTF_8));
+        Files.write(pomFile.toPath(), content.getBytes(UTF_8));
+    }
+
+    private static void writeMavenConfig(File mavenConfigFile) throws IOException {
+        mavenConfigFile.getParentFile().mkdirs();
+        var content = """
+                -T1C
+                """;
+        Files.write(mavenConfigFile.toPath(), content.getBytes(UTF_8));
     }
 
     private static String dir(String nodeId) {
