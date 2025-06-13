@@ -19,13 +19,14 @@ public class MavenWriter {
     public static void writeProjects(File rootDir, Graph graph) throws IOException {
         writeRootPom(new File(rootDir, "pom.xml"), graph);
         for (Map.Entry<String, Set<String>> entry : graph.edges().entrySet()) {
-            var name = name(entry.getKey());
-            writePom(new File(rootDir, name + "/pom.xml"), name,
-                    entry.getValue().stream().map(MavenWriter::name).toList());
+            String nodeId = entry.getKey();
+            var dir = dir(nodeId);
+            writePom(new File(rootDir, dir + "/pom.xml"), artifactId(nodeId),
+                    entry.getValue().stream().map(MavenWriter::artifactId).toList());
         }
     }
 
-    private static void writePom(File pomFile, String artifactId, Collection<String> compileDeps) throws IOException {
+    private static void writePom(File pomFile, String artifactId, Collection<String> compileDepArtifactIds) throws IOException {
         @Language("XML") var contents = """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -45,10 +46,10 @@ public class MavenWriter {
                     <dependencies>
                 """
                 + (
-                compileDeps.stream().map(dep ->
+                compileDepArtifactIds.stream().map(depArtifactId ->
                                     "        <dependency>\n"
                                         + "            <groupId>com.example.performance.test</groupId>\n"
-                                        + "            <artifactId>" + dep + """
+                                        + "            <artifactId>" + depArtifactId + """
                                 </artifactId>
                                             <version>1.0-SNAPSHOT</version>
                                         </dependency>
@@ -58,7 +59,7 @@ public class MavenWriter {
                     </dependencies>
                 </project>
                 """;
-        pomFile.getParentFile().mkdir();
+        pomFile.getParentFile().mkdirs();
         Files.write(pomFile.toPath(), contents.getBytes(StandardCharsets.UTF_8));
     }
 
@@ -121,7 +122,7 @@ public class MavenWriter {
                     <modules>
                 """
                 + (
-                graph.edges().keySet().stream().map(node -> "        <module>" + name(node) + "</module>")
+                graph.edges().keySet().stream().map(nodeId -> "        <module>" + dir(nodeId) + "</module>")
                         .collect(Collectors.joining("\n"))
         ) + """
                 
@@ -131,7 +132,15 @@ public class MavenWriter {
         Files.write(pomFile.toPath(), contents.getBytes(StandardCharsets.UTF_8));
     }
 
-    private static String name(String node) {
-        return "module_" + node;
+    private static String dir(String nodeId) {
+        var tokens = nodeId.split("_");
+        if (tokens.length != 2) {
+            throw new IllegalArgumentException("Invalid node id " + nodeId);
+        }
+        return "module_" + tokens[0] + "/module_" + tokens[1];
+    }
+
+    private static String artifactId(String nodeId) {
+        return "module_" + nodeId;
     }
 }
