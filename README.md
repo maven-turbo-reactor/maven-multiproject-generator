@@ -36,3 +36,10 @@ child nodes, M is depth, then shrinks back to 1:
                 \   /
                  3_3
 ```
+
+Then do a performance checking by building the project.
+```
+cd generated
+# this takes around 30 sec for Maven3 and 1m45s for Maven4
+mvn clean install
+```
