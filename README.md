@@ -4,7 +4,7 @@
 * Use JDK17
 * Build the tool
 ```shell
-mvn clean install 
+mvn clean install
 ```
 * Generate the project
 ```shell
