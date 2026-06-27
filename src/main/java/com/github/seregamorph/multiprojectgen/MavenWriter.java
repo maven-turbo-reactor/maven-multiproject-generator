@@ -16,25 +16,28 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class MavenWriter {
 
     public static void writeProjects(File rootDir, Graph graph, List<GroupArtifactVersion> libraries) throws IOException {
-        writeRootPom(new File(rootDir, "pom.xml"), graph, libraries);
+        writeRootPom(new File(rootDir, "pom.xml"), graph);
         writeMavenConfig(new File(rootDir, ".mvn/maven.config"));
         int libIdx = 0;
         for (Map.Entry<String, Set<String>> entry : graph.edges().entrySet()) {
             String nodeId = entry.getKey();
             var dir = dir(nodeId);
             List<String> compileDepArtifactIds = entry.getValue().stream().map(MavenWriter::artifactId).toList();
-            GroupArtifactVersion libGroupArtifactVersion = libraries.get(libIdx);
-            libIdx++;
-            if (libIdx >= libraries.size()) {
-                libIdx = 0;
+            var libGroupArtifactVersions = new ArrayList<GroupArtifactVersion>();
+            for (int i = 0; i < 8; i++) {
+                libGroupArtifactVersions.add(libraries.get(libIdx));
+                libIdx++;
+                if (libIdx >= libraries.size()) {
+                    libIdx = 0;
+                }
             }
             writePom(new File(rootDir, dir + "/pom.xml"), artifactId(nodeId),
-                    compileDepArtifactIds, libGroupArtifactVersion);
+                    compileDepArtifactIds, libGroupArtifactVersions);
         }
     }
 
     private static void writePom(File pomFile, String artifactId, Collection<String> compileDepArtifactIds,
-                                 GroupArtifactVersion libGroupArtifactVersion) throws IOException {
+                                 List<GroupArtifactVersion> libGroupArtifactVersions) throws IOException {
         @Language("XML") var content = """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -65,13 +68,14 @@ public class MavenWriter {
                                 """)
                         .collect(Collectors.joining("\n"))
         ) +
+                libGroupArtifactVersions.stream().map(gav ->
                 "        <dependency>\n"
-                + "            <groupId>"+ libGroupArtifactVersion.groupId()+"</groupId>\n"
-                + "            <artifactId>" + libGroupArtifactVersion.artifactId() + "</artifactId>\n"
-                //+ (libGroupArtifactVersion.version() == null ? "\n" : "<version>" + libGroupArtifactVersion.version() + "</version>")
+                + "            <groupId>"+ gav.groupId()+"</groupId>\n"
+                + "            <artifactId>" + gav.artifactId() + "</artifactId>\n"
+                //+ (libGroupArtifactVersion.version() == null ? "\n" : "<version>" + gav.version() + "</version>")
                         + """
                                 </dependency>
-                        """
+                        """).collect(Collectors.joining("\n"))
 
                 + """
                     </dependencies>
@@ -81,7 +85,7 @@ public class MavenWriter {
         Files.write(pomFile.toPath(), content.getBytes(UTF_8));
     }
 
-    private static void writeRootPom(File pomFile, Graph graph, List<GroupArtifactVersion> libraries) throws IOException {
+    private static void writeRootPom(File pomFile, Graph graph) throws IOException {
         @Language("XML") var content = """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -128,14 +132,21 @@ public class MavenWriter {
 
                     <dependencyManagement>
                         <dependencies>
+                            <dependency>
+                                <groupId>org.springframework.boot</groupId>
+                                <artifactId>spring-boot-dependencies</artifactId>
+                                <version>4.1.0</version>
+                                <type>pom</type>
+                                <scope>import</scope>
+                            </dependency>
                 """
-                + libraries.stream().map(lib ->
-                        "            <dependency>"
-                                + "<groupId>" + lib.groupId() + "</groupId>"
-                                + "<artifactId>" + lib.artifactId() + "</artifactId>"
-                                + "<version>" + Objects.requireNonNull(lib.version()) + "</version>"
-                                + "</dependency>\n")
-                .collect(Collectors.joining(""))
+//                + libraries.stream().map(lib ->
+//                        "            <dependency>"
+//                                + "<groupId>" + lib.groupId() + "</groupId>"
+//                                + "<artifactId>" + lib.artifactId() + "</artifactId>"
+//                                + "<version>" + Objects.requireNonNull(lib.version()) + "</version>"
+//                                + "</dependency>\n")
+//                .collect(Collectors.joining(""))
                 +"""
 
                         </dependencies>
