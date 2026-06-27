@@ -5,10 +5,7 @@ import org.intellij.lang.annotations.Language;
 import java.io.File;
 import java.io.IOException;
 import java.nio.file.Files;
-import java.util.Collection;
-import java.util.List;
-import java.util.Map;
-import java.util.Set;
+import java.util.*;
 import java.util.stream.Collectors;
 
 import static java.nio.charset.StandardCharsets.UTF_8;
@@ -19,7 +16,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
 public class MavenWriter {
 
     public static void writeProjects(File rootDir, Graph graph, List<GroupArtifactVersion> libraries) throws IOException {
-        writeRootPom(new File(rootDir, "pom.xml"), graph);
+        writeRootPom(new File(rootDir, "pom.xml"), graph, libraries);
         writeMavenConfig(new File(rootDir, ".mvn/maven.config"));
         int libIdx = 0;
         for (Map.Entry<String, Set<String>> entry : graph.edges().entrySet()) {
@@ -70,8 +67,8 @@ public class MavenWriter {
         ) +
                 "        <dependency>\n"
                 + "            <groupId>"+ libGroupArtifactVersion.groupId()+"</groupId>\n"
-                + "            <artifactId>" + libGroupArtifactVersion.artifactId() + "</artifactId>"
-                + (libGroupArtifactVersion.version() == null ? "\n" : "<version>" + libGroupArtifactVersion.version() + "</version>")
+                + "            <artifactId>" + libGroupArtifactVersion.artifactId() + "</artifactId>\n"
+                //+ (libGroupArtifactVersion.version() == null ? "\n" : "<version>" + libGroupArtifactVersion.version() + "</version>")
                         + """
                                 </dependency>
                         """
@@ -84,7 +81,7 @@ public class MavenWriter {
         Files.write(pomFile.toPath(), content.getBytes(UTF_8));
     }
 
-    private static void writeRootPom(File pomFile, Graph graph) throws IOException {
+    private static void writeRootPom(File pomFile, Graph graph, List<GroupArtifactVersion> libraries) throws IOException {
         @Language("XML") var content = """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -131,13 +128,16 @@ public class MavenWriter {
 
                     <dependencyManagement>
                         <dependencies>
-                            <dependency>
-                                <groupId>org.springframework.boot</groupId>
-                                <artifactId>spring-boot-dependencies</artifactId>
-                                <version>4.1.0</version>
-                                <type>pom</type>
-                                <scope>import</scope>
-                            </dependency>
+                """
+                + libraries.stream().map(lib ->
+                        "            <dependency>"
+                                + "<groupId>" + lib.groupId() + "</groupId>"
+                                + "<artifactId>" + lib.artifactId() + "</artifactId>"
+                                + "<version>" + Objects.requireNonNull(lib.version()) + "</version>"
+                                + "</dependency>\n")
+                .collect(Collectors.joining(""))
+                +"""
+
                         </dependencies>
                     </dependencyManagement>
 
