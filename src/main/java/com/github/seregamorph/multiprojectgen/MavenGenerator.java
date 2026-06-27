@@ -37,18 +37,21 @@ public class MavenGenerator {
         System.out.println("Generated project can be found in " + rootDir.getAbsolutePath());
     }
 
-    private static List<GroupArtifactId> loadLibrariesDictionary() {
+    private static List<GroupArtifactVersion> loadLibrariesDictionary() {
         var file = new File("libraries.txt");
         try (var br = new BufferedReader(new FileReader(file))) {
             String line;
-            List<GroupArtifactId> result = new ArrayList<>();
+            List<GroupArtifactVersion> result = new ArrayList<>();
             while ((line = br.readLine()) != null) {
                 if (line.isEmpty() || line.startsWith("#")) {
                     continue;
                 }
                 String[] parts = line.split(":");
-                if (parts.length == 2) {
-                    result.add(new GroupArtifactId(parts[0], parts[1]));
+                if (parts.length == 3) {
+                    result.add(new GroupArtifactVersion(parts[0], parts[1], parts[2]));
+                } else if (parts.length == 2) {
+                    // inherit dependency version from spring-boot-dependencies
+                    result.add(new GroupArtifactVersion(parts[0], parts[1], null));
                 } else {
                     throw new IllegalArgumentException("Invalid line " + line);
                 }

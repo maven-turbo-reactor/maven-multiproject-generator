@@ -18,7 +18,7 @@ import static java.nio.charset.StandardCharsets.UTF_8;
  */
 public class MavenWriter {
 
-    public static void writeProjects(File rootDir, Graph graph, List<GroupArtifactId> libraries) throws IOException {
+    public static void writeProjects(File rootDir, Graph graph, List<GroupArtifactVersion> libraries) throws IOException {
         writeRootPom(new File(rootDir, "pom.xml"), graph);
         writeMavenConfig(new File(rootDir, ".mvn/maven.config"));
         int libIdx = 0;
@@ -26,18 +26,18 @@ public class MavenWriter {
             String nodeId = entry.getKey();
             var dir = dir(nodeId);
             List<String> compileDepArtifactIds = entry.getValue().stream().map(MavenWriter::artifactId).toList();
-            GroupArtifactId libGroupArtifactId = libraries.get(libIdx);
+            GroupArtifactVersion libGroupArtifactVersion = libraries.get(libIdx);
             libIdx++;
             if (libIdx >= libraries.size()) {
                 libIdx = 0;
             }
             writePom(new File(rootDir, dir + "/pom.xml"), artifactId(nodeId),
-                    compileDepArtifactIds, libGroupArtifactId);
+                    compileDepArtifactIds, libGroupArtifactVersion);
         }
     }
 
     private static void writePom(File pomFile, String artifactId, Collection<String> compileDepArtifactIds,
-                                 GroupArtifactId libGroupArtifactId) throws IOException {
+                                 GroupArtifactVersion libGroupArtifactVersion) throws IOException {
         @Language("XML") var content = """
                 <?xml version="1.0" encoding="UTF-8"?>
                 <project xmlns="http://maven.apache.org/POM/4.0.0"
@@ -69,11 +69,12 @@ public class MavenWriter {
                         .collect(Collectors.joining("\n"))
         ) +
                 "        <dependency>\n"
-                + "            <groupId>"+libGroupArtifactId.groupId()+"</groupId>\n"
-                + "            <artifactId>" + libGroupArtifactId.artifactId() + """
-                                </artifactId>
-                                        </dependency>
-                                """
+                + "            <groupId>"+ libGroupArtifactVersion.groupId()+"</groupId>\n"
+                + "            <artifactId>" + libGroupArtifactVersion.artifactId() + "</artifactId>"
+                + (libGroupArtifactVersion.version() == null ? "\n" : "<version>" + libGroupArtifactVersion.version() + "</version>")
+                        + """
+                                </dependency>
+                        """
 
                 + """
                     </dependencies>
